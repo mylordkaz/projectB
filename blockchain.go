@@ -14,7 +14,7 @@ type Block struct{
 	data 			map[string]interface{}
 	hash 			string
 	previousHash 	string
-	timestamp 		time.Time
+	timestamp 		int64
 	pow 			int
 }
 type Blockchain struct{
@@ -25,7 +25,7 @@ type Blockchain struct{
 
 func (b Block) calculateHash() string {
 	data, _ := json.Marshal(b.data)
-	blockData := b.previousHash + string(data) + b.timestamp.String() + strconv.Itoa(b.pow)
+	blockData := b.previousHash + string(data) + strconv.FormatInt(b.timestamp, 10) + strconv.Itoa(b.pow)
 	blockHash := sha256.Sum256([]byte(blockData))
 	return fmt.Sprintf("%x", blockHash)
 }
@@ -38,7 +38,7 @@ func (b *Block) mine(difficulty int) {
 func CreateBlockchain(difficulty int) Blockchain {
 	genesisBlock := Block{
 		hash: "0",
-		timestamp: time.Now(),
+		timestamp: time.Now().Unix(),
 	}
 	return Blockchain{
 		genesisBlock,
@@ -54,17 +54,17 @@ func (b *Blockchain) addBlock(from, to string, amount float64){
 	}
 	lastBlock := b.chain[len(b.chain)-1]
 	newBlock := Block{
-		data: blockData,
-		previousHash: lastBlock.hash,
-		timestamp: time.Now(),
+		data:  				blockData,
+		previousHash: 		lastBlock.hash,
+		timestamp: 			time.Now().Unix(),
 	}
 	newBlock.mine(b.difficulty)
 	b.chain = append(b.chain, newBlock)
 }
 func (b Blockchain) isValid() bool {
-	for i := range b.chain[1:] {
-		previousBlock := b.chain[i]
-		currentBlock := b.chain[i+1]
+	for i := 1 ; i < len(b.chain); i++  {
+		previousBlock := b.chain[i-1]
+		currentBlock := b.chain[i]
 		if currentBlock.hash != currentBlock.calculateHash() || currentBlock.previousHash != previousBlock.hash {
 			return false
 		}
@@ -77,8 +77,11 @@ func main () {
 	 blockchain := CreateBlockchain(2)
 
 	// record transaction
-	blockchain.addBlock("Alice", "Bob", 5)
+	blockchain.addBlock("Alice", "Bob", 3)
 	blockchain.addBlock("Max", "Bob", 5)
+	blockchain.addBlock("Bob", "Alice", 12)
+	blockchain.addBlock("Max", "Alice", 4)
 
 	fmt.Println(blockchain.isValid())
+	fmt.Println(blockchain)
 }
