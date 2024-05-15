@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -28,6 +29,9 @@ func (b Block) calculateHash() string {
 	blockHash := sha256.Sum256([]byte(blockData))
 	return fmt.Sprintf("%x", blockHash)
 }
-func (b *Block) mian (difficulty int){
-	
+func (b *Block) mine(difficulty int) {
+	for !strings.HasPrefix(b.hash, strings.Repeat("0", difficulty)){
+		b.pow++
+		b.hash = b.calculateHash()
+	}
 }
